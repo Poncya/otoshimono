@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>落とし物一覧 - otoshimono</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg-body: #f5f5f5;
+      --bg-card: #ffffff;
+      --border-subtle: #e5e7eb;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --primary: #2563eb;
+      --primary-soft: #dbeafe;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: var(--bg-body);
+      color: var(--text-main);
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 8px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin: 0;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      margin: 0 0 12px 0;
+    }
+
+    .card {
+      background: var(--bg-card);
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+      margin-bottom: 16px;
+      transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    }
+
+    form.inline {
+      display: inline;
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    button {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    button.primary {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 1px 4px rgba(37, 99, 235, 0.3);
+    }
+
+    button.primary:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+    }
+
+    button.danger {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    button.danger:hover {
+      background: #dc2626;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.32);
+    }
+
+    button:not(.primary):not(.danger) {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    button:not(.primary):not(.danger):hover {
+      background: #d1d5db;
+      transform: translateY(-1px);
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="email"],
+    input[type="password"],
+    input[type="datetime-local"],
+    textarea {
+      padding: 6px 8px;
+      width: 100%;
+      max-width: 260px;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      font-size: 0.9rem;
+      margin-top: 2px;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    small {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .search-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .search-field {
+      min-width: 150px;
+    }
+
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      min-width: 640px; /* スマホでは横スクロール */
+    }
+
+    th, td {
+      padding: 8px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    th {
+      background: #f9fafb;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 12px;
+      }
+
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      h1 {
+        font-size: 1.2rem;
+      }
+
+      .card {
+        padding: 12px;
+        border-radius: 10px;
+      }
+
+      input[type="text"],
+      input[type="date"],
+      input[type="datetime-local"] {
+        max-width: 100%;
+      }
+
+      table {
+        min-width: 520px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <% const f = filters || {}; %>
+
+  <header>
+    <h1>落とし物一覧</h1>
+    <div>
+      <% if (currentUserId) { %>
+        <a href="/mypage">マイページ</a>
+        |
+        <form class="inline" action="/logout" method="post" style="display:inline;">
+          <button type="submit">ログアウト</button>
+        </form>
+      <% } else { %>
+        <a href="/login">ログイン</a> /
+        <a href="/register">新規登録</a>
+      <% } %>
+    </div>
+  </header>
+
+  <!-- 検索フォーム -->
+  <section class="card">
+    <h2>検索・絞り込み</h2>
+    <form action="/items" method="get">
+      <div class="search-row">
+        <div class="search-field">
+          <label for="keyword">品名キーワード</label><br />
+          <input
+            type="text"
+            id="keyword"
+            name="keyword"
+            value="<%= f.keyword || '' %>"
+            placeholder="例：傘、財布"
+          />
+        </div>
+
+        <div class="search-field">
+          <label for="place">拾った場所</label><br />
+          <input
+            type="text"
+            id="place"
+            name="place"
+            value="<%= f.place || '' %>"
+            placeholder="例：食堂、3階廊下"
+          />
+        </div>
+
+        <div class="search-field">
+          <label for="from">拾った日（開始）</label><br />
+          <input
+            type="date"
+            id="from"
+            name="from"
+            value="<%= f.from || '' %>"
+          />
+        </div>
+
+        <div class="search-field">
+          <label for="to">拾った日（終了）</label><br />
+          <input
+            type="date"
+            id="to"
+            name="to"
+            value="<%= f.to || '' %>"
+          />
+        </div>
+
+        <div>
+          <button class="primary" type="submit">検索</button>
+        </div>
+
+        <div>
+          <a href="/items">
+            <button type="button">条件をクリア</button>
+          </a>
+        </div>
+      </div>
+    </form>
+  </section>
+
+    <!-- 新規登録フォーム -->
+  <section class="card">
+    <h2>落とし物を登録する</h2>
+    <form action="/items" method="post">
+      <div>
+        <label for="name">品名</label><br />
+        <input type="text" id="name" name="name" required />
+      </div>
+
+      <div style="margin-top: 8px;">
+        <label for="place">拾った場所</label><br />
+        <input type="text" id="place" name="place" required />
+      </div>
+
+      <div style="margin-top: 8px;">
+        <label for="pickedAt">拾った日時（任意）</label><br />
+        <input
+          type="datetime-local"
+          id="pickedAt"
+          name="pickedAt"
+        />
+        <small>※ 未入力の場合は「登録した時刻」が自動で入ります</small>
+      </div>
+
+      <div style="margin-top: 12px;">
+        <button class="primary" type="submit">登録</button>
+      </div>
+    </form>
+  </section>
+
+
+  <!-- 一覧表示 -->
+  <section class="card">
+    <h2>登録済みの落とし物</h2>
+
+    <% if (!items || items.length === 0) { %>
+      <p>条件に一致する落とし物はありません。</p>
+    <% } else { %>
+        <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>品名</th>
+            <th>拾った場所</th>
+            <th>拾った日時</th>
+            <th>登録者</th>
+            <th>持ち主</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% items.forEach(function(item) { %>
+            <tr>
+              <td><%= item.id %></td>
+              <td>
+                <a href="/items/detail?id=<%= item.id %>">
+                    <%= item.name %>
+                </a>
+              </td>
+
+              <td><%= item.place %></td>
+              <td>
+                <% if (item.pickedAt) { %>
+                  <%= item.pickedAt.toISOString().slice(0, 16).replace('T', ' ') %>
+                <% } %>
+              </td>
+              <td><%= item.registrant ? item.registrant.email : '-' %></td>
+              <td><%= item.owner ? item.owner.email : '-' %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+      </div>
+      <small>※ スマートフォンでは横にスワイプして全体を確認できます</small>
+    <% } %>
+  </section>
+</body>
+</html>

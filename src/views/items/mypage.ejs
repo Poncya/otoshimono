@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>マイページ - otoshimono</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg-body: #f5f5f5;
+      --bg-card: #ffffff;
+      --border-subtle: #e5e7eb;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --primary: #2563eb;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: var(--bg-body);
+      color: var(--text-main);
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 8px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin: 0;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      margin: 0 0 12px 0;
+    }
+
+    h3 {
+      font-size: 1rem;
+      margin: 0 0 6px 0;
+    }
+
+    .card {
+      background: var(--bg-card);
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+      margin-bottom: 16px;
+      transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      min-width: 640px;
+    }
+
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    th, td {
+      padding: 8px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    th {
+      background: #f9fafb;
+    }
+
+    button {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    button.primary {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 1px 4px rgba(37, 99, 235, 0.3);
+    }
+
+    button.primary:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+    }
+
+    button.danger {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    button.danger:hover {
+      background: #dc2626;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.32);
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    form.inline {
+      display: inline;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 12px;
+      }
+
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .card {
+        padding: 12px;
+      }
+
+      table {
+        min-width: 520px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>マイページ</h1>
+    <div>
+      <a href="/items">落とし物一覧</a>
+      |
+      <form class="inline" action="/logout" method="post" style="display:inline;">
+        <button type="submit">ログアウト</button>
+      </form>
+    </div>
+  </header>
+
+  <!-- 自分が登録した落とし物 -->
+  <section class="card">
+    <h2>自分が登録した落とし物</h2>
+
+    <% if (!items || items.length === 0) { %>
+      <p>まだ自分の登録した落とし物はありません。</p>
+    <% } else { %>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>品名</th>
+            <th>拾った場所</th>
+            <th>拾った日時</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% items.forEach(function(item) { %>
+            <tr>
+              <td><%= item.id %></td>
+              <td>
+                <a href="/items/detail?id=<%= item.id %>">
+                  <%= item.name %>
+                </a>
+              </td>
+              <td><%= item.place %></td>
+              <td>
+                <% if (item.pickedAt) { %>
+                  <%= item.pickedAt.toISOString().slice(0, 16).replace('T', ' ') %>
+                <% } %>
+              </td>
+              <td>
+                <a href="/items/edit?id=<%= item.id %>">
+                  <button type="button" class="primary">編集</button>
+                </a>
+
+                <form class="inline" action="/items/delete?id=<%= item.id %>" method="post" onsubmit="return confirm('本当に削除しますか？');">
+                  <button type="submit" class="danger">削除</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+      </div>
+      <small>※ スマートフォンでは横にスワイプして全体を確認できます</small>
+    <% } %>
+  </section>
+
+  <!-- 持ち主申請一覧 -->
+  <section class="card">
+    <h2>持ち主申請一覧</h2>
+
+    <%
+      const itemsWithClaims = items.filter(i => i.claims && i.claims.length > 0);
+    %>
+
+    <% if (itemsWithClaims.length === 0) { %>
+      <p>あなたが登録した落とし物への申請はまだありません。</p>
+    <% } else { %>
+      <% itemsWithClaims.forEach(function(item) { %>
+        <div style="margin-bottom: 16px;">
+          <h3>
+            <a href="/items/detail?id=<%= item.id %>">
+              [ID <%= item.id %>] <%= item.name %>
+            </a>
+          </h3>
+
+          <ul>
+            <% item.claims.forEach(function(claim) { %>
+              <li style="margin-bottom: 8px;">
+                <div>
+                  <strong><%= claim.name %></strong>（<%= claim.contact %>）
+                  / アカウント: <%= claim.applicant ? claim.applicant.email : '-' %>
+                </div>
+                <div>
+                  申請日時:
+                  <%= claim.createdAt.toISOString().slice(0, 16).replace('T', ' ') %>
+                </div>
+                <% if (claim.message) { %>
+                  <div>メッセージ: <%= claim.message %></div>
+                <% } %>
+              </li>
+            <% }); %>
+          </ul>
+        </div>
+      <% }); %>
+    <% } %>
+  </section>
+</body>
+</html>

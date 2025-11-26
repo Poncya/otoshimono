@@ -1,0 +1,58 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // poncya DB の中の "otoshimono" スキーマにテーブルを作る
+  schemas  = ["otoshimono"]
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  password String
+
+  // 関連（Relation）
+  itemsRegistered Item[] @relation("RegisteredByUser") // 自分が登録した落とし物
+  itemsOwned      Item[] @relation("OwnedByUser")      // 自分が持ち主として登録された落とし物
+  claims          Claim[]                              // 自分が申請した「これは私の物です」
+
+  @@schema("otoshimono")
+}
+
+model Item {
+  id       Int      @id @default(autoincrement())
+  name     String   // 落とし物の名前
+  place    String   // 拾った場所
+  subsid   Int      // 落とし物を登録した人の id（User.id）
+  ownerid  Int?     // 落とし主の id（未確定の間は null）
+  pickedAt DateTime @default(now()) // 拾った日時
+
+  // 関連
+  registrant User  @relation("RegisteredByUser", fields: [subsid], references: [id])
+  owner      User? @relation("OwnedByUser",      fields: [ownerid], references: [id])
+
+  claims     Claim[]
+
+  @@schema("otoshimono")
+}
+
+model Claim {
+  id          Int      @id @default(autoincrement())
+  itemId      Int      // どの落とし物への申請か
+  applicantId Int      // 申請したユーザー（User.id）
+  name        String   // 申請者の氏名（フォーム入力）
+  contact     String   // 連絡先（メール or 電話など）
+  message     String?  // 補足メッセージ
+  createdAt   DateTime @default(now())
+
+  // 関連
+  item      Item @relation(fields: [itemId],      references: [id])
+  applicant User @relation(fields: [applicantId], references: [id])
+
+  @@schema("otoshimono")
+}
