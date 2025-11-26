@@ -4,34 +4,39 @@
   <meta charset="UTF-8" />
   <title>新規登録 - otoshimono</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/style.css" />
 </head>
-<body>
-  <div class="card">
-    <h1>新規登録</h1>
-    <p class="sub">メールアドレスとパスワードを登録します。</p>
+<body class="bg-light">
+  <div class="auth-page">
+    <div class="auth-card">
+      <h1 class="auth-title">新規登録</h1>
+      <p class="auth-subtitle">
+        落とし物の登録や「これは私の物です」申請を行うためのアカウントを作成します。
+      </p>
 
-    <% if (error) { %>
-      <p class="error"><%= error %></p>
-    <% } %>
+      <% if (error) { %>
+        <div class="alert alert-error"><%= error %></div>
+      <% } %>
 
-    <form action="/register" method="post">
-      <div>
-        <label for="email">メールアドレス</label><br />
-        <input type="email" id="email" name="email" required />
-      </div>
+      <form class="auth-form" action="/register" method="post">
+        <div class="form-group">
+          <label for="email">メールアドレス</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value="<%= formData && formData.email ? formData.email : '' %>"
+            required
+          />
+          <span class="hint">ログインIDとして使用します。</span>
+        </div>
 
-      <div style="margin-top: 8px;">
-        <label for="password">パスワード</label><br />
-        <input type="password" id="password" name="password" required />
-      </div>
-
-      <button type="submit">登録</button>
-    </form>
-
-    <p style="margin-top: 12px; font-size: 0.85rem;">
-      すでにアカウントをお持ちの場合は
-      <a href="/login">ログイン</a>
-    </p>
-  </div>
-</body>
-</html>
+        <div class="form-group">
+          <label for="password">パスワード</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            minlength="8"
+            required
+          />

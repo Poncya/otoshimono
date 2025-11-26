@@ -1,105 +1,124 @@
 // src/routes/auth.js
 const express = require('express');
-const prisma = require('../lib/prisma');
-const { hashPassword, verifyPassword } = require('../lib/hash');
-
 const router = express.Router();
 
-// 新規登録フォーム
+const prisma = require('../lib/prisma');
+const { hashPassword, comparePassword } = require('../lib/hash');
+
+// -------------------------
+// 新規登録画面
+// -------------------------
 router.get('/register', (req, res) => {
-  res.render('auth/register', { error: null });
+  res.render('auth/register', {
+    error: null,
+    formData: {}
+  });
 });
 
-// 新規登録の送信
+// -------------------------
+// 新規登録 POST
+// -------------------------
 router.post('/register', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.render('auth/register', {
+    return res.status(400).render('auth/register', {
       error: 'メールアドレスとパスワードを入力してください。',
+      formData: { email }
     });
   }
 
   try {
-    // すでに同じメールアドレスが使われていないかチェック
-    const existing = await prisma.user.findUnique({
-      where: { email },
+    // すでに登録済みかチェック
+    const existingUser = await prisma.user.findFirst({
+      where: { email }    // ★ findUnique → findFirst
     });
 
-    if (existing) {
-      return res.render('auth/register', {
+    if (existingUser) {
+      return res.status(400).render('auth/register', {
         error: 'このメールアドレスはすでに登録されています。',
+        formData: { email }
       });
     }
 
+    // パスワードをハッシュ化して保存
     const hashed = await hashPassword(password);
 
     const user = await prisma.user.create({
       data: {
         email,
-        password: hashed,
-      },
+        password: hashed
+      }
     });
 
-    // ログイン状態にする
     req.session.userId = user.id;
-
-    // とりあえずトップへ（あとで /items に変える）
-    res.redirect('/');
+    res.redirect('/items');
   } catch (err) {
-    console.error(err);
-    res.render('auth/register', {
-      error: '登録中にエラーが発生しました。',
+    console.error('REGISTER ERROR:', err);
+    return res.status(500).render('auth/register', {
+      error: 'サーバーエラーが発生しました。時間をおいて再度お試しください。',
+      formData: { email }
     });
   }
 });
 
-// ログインフォーム
+// -------------------------
+// ログイン画面
+// -------------------------
 router.get('/login', (req, res) => {
-  res.render('auth/login', { error: null });
+  res.render('auth/login', {
+    error: null,
+    formData: {}
+  });
 });
 
-// ログイン送信
+// -------------------------
+// ログイン POST
+// -------------------------
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.render('auth/login', {
+    return res.status(400).render('auth/login', {
       error: 'メールアドレスとパスワードを入力してください。',
+      formData: { email }
     });
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email },
+    const user = await prisma.user.findFirst({
+      where: { email }   // ★ findUnique → findFirst
     });
 
     if (!user) {
-      return res.render('auth/login', {
-        error: 'メールアドレスまたはパスワードが違います。',
+      return res.status(400).render('auth/login', {
+        error: 'メールアドレスまたはパスワードが正しくありません。',
+        formData: { email }
       });
     }
 
-    const ok = await verifyPassword(password, user.password);
-
+    const ok = await comparePassword(password, user.password);
     if (!ok) {
-      return res.render('auth/login', {
-        error: 'メールアドレスまたはパスワードが違います。',
+      return res.status(400).render('auth/login', {
+        error: 'メールアドレスまたはパスワードが正しくありません。',
+        formData: { email }
       });
     }
 
-    // ログイン成功
     req.session.userId = user.id;
-    res.redirect('/');
+    res.redirect('/items');
   } catch (err) {
-    console.error(err);
-    res.render('auth/login', {
-      error: 'ログイン中にエラーが発生しました。',
+    console.error('LOGIN ERROR:', err);
+    return res.status(500).render('auth/login', {
+      error: 'サーバーエラーが発生しました。時間をおいて再度お試しください。',
+      formData: { email }
     });
   }
 });
 
+// -------------------------
 // ログアウト
+// -------------------------
 router.post('/logout', (req, res) => {
   req.session.destroy(() => {
     res.redirect('/login');
