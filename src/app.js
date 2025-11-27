@@ -68,6 +68,15 @@ app.get('/css/style.css', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'css', 'style.css'));
 });
 
+// ルートに来たらログイン（または一覧）へリダイレクト
+app.get('/', (req, res) => {
+  if (req.session && req.session.userId) {
+    // すでにログインしていたら一覧へ
+    return res.redirect('/items');
+  }
+  // それ以外はログイン画面へ
+  res.redirect('/login');
+});
 
 // 404 の簡易ハンドラ（お好みで）
 app.use((req, res) => {
