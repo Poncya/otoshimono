@@ -4,139 +4,53 @@
   <meta charset="UTF-8" />
   <title>ログイン - otoshimono</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <style>
-    :root {
-      --bg-body: #f5f5f5;
-      --bg-card: #ffffff;
-      --border-subtle: #e5e7eb;
-      --text-main: #111827;
-      --text-muted: #6b7280;
-      --primary: #2563eb;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 0;
-      padding: 16px;
-      background: var(--bg-body);
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
-
-    .card {
-      background: var(--bg-card);
-      padding: 20px 18px;
-      border-radius: 16px;
-      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
-      width: 100%;
-      max-width: 360px;
-    }
-
-    h1 {
-      font-size: 1.3rem;
-      margin: 0 0 8px 0;
-    }
-
-    p.sub {
-      margin: 0 0 16px 0;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    label {
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--text-muted);
-    }
-
-    input[type="email"],
-    input[type="password"] {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border-subtle);
-      font-size: 0.9rem;
-      margin-top: 4px;
-    }
-
-    button {
-      width: 100%;
-      margin-top: 12px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: none;
-      background: var(--primary);
-      color: #ffffff;
-      font-size: 0.95rem;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
-      transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
-    }
-
-    button:hover {
-      background: #1d4ed8;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.45);
-    }
-
-    a {
-      color: var(--primary);
-      text-decoration: none;
-      font-size: 0.85rem;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-
-    .error {
-      color: #dc2626;
-      font-size: 0.8rem;
-      margin-bottom: 8px;
-    }
-
-    @media (max-width: 480px) {
-      .card {
-        padding: 16px 14px;
-        border-radius: 12px;
-      }
-    }
-  </style>
+  <!-- 共通CSS -->
+  <link rel="stylesheet" href="/css/style.css" />
 </head>
-<body>
-  <main>
-    <h1>ログイン</h1>
+<body class="bg-light">
+  <div class="auth-page">
+    <div class="auth-card">
+      <h1 class="auth-title">ログイン</h1>
+      <p class="auth-subtitle">
+        登録したアカウントで、落とし物の登録や「これは私の物です」申請を行います。
+      </p>
 
-    <% if (error) { %>
-      <p style="color: red;"><%= error %></p>
-    <% } %>
+      <% if (error) { %>
+        <div class="alert alert-error"><%= error %></div>
+      <% } %>
 
-    <form action="/login" method="post">
-      <div>
-        <label for="email">メールアドレス</label><br />
-        <input type="email" id="email" name="email" required />
-      </div>
+      <form class="auth-form" action="/login" method="post">
+        <div class="form-group">
+          <label for="email">メールアドレス</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value="<%= formData && formData.email ? formData.email : '' %>"
+            required
+          />
+        </div>
 
-      <div>
-        <label for="password">パスワード</label><br />
-        <input type="password" id="password" name="password" required />
-      </div>
+        <div class="form-group">
+          <label for="password">パスワード</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+          />
+        </div>
 
-      <button type="submit">ログイン</button>
-    </form>
+        <button type="submit" class="btn primary full">
+          ログイン
+        </button>
+      </form>
 
-    <p>
-      アカウントをお持ちでない場合は、
-      <a href="/register">新規登録</a>
-    </p>
-  </main>
+      <p class="auth-footer-text">
+        アカウントをお持ちでない場合は
+        <a href="/register">新規登録</a> してください。
+      </p>
+    </div>
+  </div>
 </body>
 </html>
